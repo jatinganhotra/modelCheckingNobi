@@ -842,11 +842,14 @@ public class StorageProxy implements StorageProxyMBean
     }
 
     private static void appendMismatchInfo(Row row, boolean isMismatched) {
-    	String status = isMismatched ? "Mismatched" : "Good";
-    	ByteBuffer field = ByteBuffer.wrap("zextra".getBytes(Charset.forName("UTF-8")));
-    	ByteBuffer value = ByteBuffer.wrap(status.getBytes(Charset.forName("UTF-8")));
-    	Column c = new Column(field, value);
-    	row.cf.addColumn(null, c);
+        String key = new String(row.key.key.array(), Charset.forName("UTF-8"));
+        if (key.contains("user")) {
+            String status = isMismatched ? "Mismatched" : "Good";
+            ByteBuffer field = ByteBuffer.wrap("zextra".getBytes(Charset.forName("UTF-8")));
+            ByteBuffer value = ByteBuffer.wrap(status.getBytes(Charset.forName("UTF-8")));
+            Column c = new Column(field, value);
+            row.cf.addColumn(null, c);
+        }
     }
     
     /**
