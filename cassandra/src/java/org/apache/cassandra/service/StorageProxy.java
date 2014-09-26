@@ -843,6 +843,7 @@ public class StorageProxy implements StorageProxyMBean
 
     private static void appendMismatchInfo(Row row, boolean isMismatched) {
         String key = new String(row.key.key.array(), Charset.forName("UTF-8"));
+        logger.info("key = " + key);
         if (key.contains("user")) {
             String status = isMismatched ? "Mismatched" : "Good";
             ByteBuffer field = ByteBuffer.wrap("zextra".getBytes(Charset.forName("UTF-8")));
