@@ -24,8 +24,8 @@
 
 table=usertable
 fieldcount=1
-recordcount=1
-operationcount=1000
+recordcount=20
+operationcount=2000
 workload=com.yahoo.ycsb.workloads.CoreWorkload
 
 readallfields=true
