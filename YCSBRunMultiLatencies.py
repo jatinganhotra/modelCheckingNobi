@@ -11,8 +11,20 @@ def lognstat(mu, sigma):
   v = np.exp(2 * mu + sigma**2) * (np.exp(sigma**2) - 1)
   return m, v
 
+def get_hosts(numnode):
+  cmd =" \
+    for (( i = 0; i < %s; i++)); do \n \
+      ssh sonnbc@node-0$i.riak.confluence.emulab.net -C \
+        \"ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}'\" \n \
+    done | tr '\\n' ',' \
+    " % numnode
+  return os.popen(cmd).read()
+
 def main(numnode, st, en, counts):
-  load_cmd = "./YCSBRun.sh -l -n %s >/dev/null 2>&1" % numnode
+  hosts = get_hosts(numnode)
+  print "Hosts  = %s" % hosts
+
+  load_cmd = "./YCSBRun.sh -l -n %s -h %s >/dev/null 2>&1" % (numnode, hosts)
   os.system(load_cmd)
 
   st, en = max(st, 1), max(en, 1)
@@ -27,8 +39,10 @@ def main(numnode, st, en, counts):
     sys.stdout.flush()
 
     netem_cmd = 'ssh sonnbc@node-00.riak.confluence.emulab.net \
-      /scratch/Confluence/riak/netem/set_delay_all.sh %s %s %s >/dev/null' % (numnode, mu, sigma)
-    run_cmd = "./YCSBRun.sh -t -n %s | grep INFO > ycsb.log && python YCSBResultParser.py ycsb.log" % numnode
+      /scratch/Confluence/riak/netem/set_delay_all.sh %s %s %s \
+      >/dev/null' % (numnode, mu, sigma)
+    run_cmd = "./YCSBRun.sh -t -n %s | grep INFO > ycsb.log \
+              && python YCSBResultParser.py ycsb.log" % (numnode, hosts)
     os.system(netem_cmd)
     os.system(run_cmd)
 

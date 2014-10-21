@@ -1,14 +1,15 @@
 #!/bin/bash
 # Given the number of nodes N, set up the Cassandra cluster using nodes from 1 to N
 
-PROJECT_HOME=/modelChecking
-SYNC_POINT=/scratch/Confluence/modelChecking
+CASSANDRA_HOME=/modelCheckingCassandra
+SYNC_POINT_CASSANDRA=/scratch/Confluence/modelCheckingCassandra
+SYNC_POINT_YCSB=/scratch/Confluence/modelCheckingYCSB
 CASSANDRA_DATA=/var/lib/cassandra
 CASSANDRA_LOG=/var/log/cassandra
 
 usage()
 {
-  echo "usage: $1 -n numnode [-d (deploy) | -u (update) recompile/reset/keep]"
+  echo "usage: $1 -n numnode -b cassandraBranch [timestamp | agnostic] [-d (deploy) | -u (update) recompile/reset/keep]"
   echo "recompile: recompile cassandra and YCSB and reset cluster"
   echo "reset: don't recompile the code but reset cluster"
   echo "keep: just git pull but do nothing else"
@@ -30,9 +31,9 @@ kill_cassandra()
 init_single_node()
 {
   ssh -t sonnbc@node-0$1.riak.confluence.emulab.net -C "
-    sudo rm -rf $PROJECT_HOME;
-    sudo cp -r $SYNC_POINT $PROJECT_HOME;
-    sudo chown -R sonnbc: $PROJECT_HOME;
+    sudo rm -rf $CASSANDRA_HOME;
+    sudo cp -r $SYNC_POINT_CASSANDRA $CASSANDRA_HOME;
+    sudo chown -R sonnbc: $CASSANDRA_HOME;
     sudo rm -rf $CASSANDRA_DATA;
     sudo mkdir -p $CASSANDRA_DATA;
     sudo chown -R sonnbc $CASSANDRA_DATA;
@@ -40,7 +41,7 @@ init_single_node()
     sudo mkdir -p $CASSANDRA_LOG;
     sudo chown -R sonnbc $CASSANDRA_LOG;
     export listen_ip=\$(ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}');
-    sudo sed -i -e \"s/localhost/\$listen_ip/g\" $PROJECT_HOME/cassandra/conf/cassandra.yaml;
+    sudo sed -i -e \"s/localhost/\$listen_ip/g\" $CASSANDRA_HOME/conf/cassandra.yaml;
   "
 }
 
@@ -57,7 +58,7 @@ start_cluster()
 
   #start other nodes
   for (( i = 0; i < $numnode; i++)); do
-    ssh -t sonnbc@node-0$i.riak.confluence.emulab.net -C "$PROJECT_HOME/cassandra/bin/cassandra; sleep 15;" &
+    ssh -t sonnbc@node-0$i.riak.confluence.emulab.net -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
   done
 
   wait
@@ -69,11 +70,13 @@ deploy()
   echo "Deploy $numnode"
 
   ssh -t sonnbc@node-00.riak.confluence.emulab.net -C "
-    sudo rm -rf $SYNC_POINT;
-    git clone git@github.com:Sonnbc/modelCheckingNobi.git $SYNC_POINT;
-    cd $SYNC_POINT/YCSB;
+    sudo rm -rf $SYNC_POINT_CASSANDRA;
+    sudo rm -rf $SYNC_POINT_YCSB;
+    git clone git@github.com:Sonnbc/modelCheckingCassandra.git $SYNC_POINT_CASSANDRA;
+    git clone git@github.com:Sonnbc/modelCheckingNobi.git $SYNC_POINT_YCSB;
+    cd $SYNC_POINT_YCSB/YCSB;
     mvn clean install -fae;
-    cd $SYNC_POINT/cassandra;
+    cd $SYNC_POINT_CASSANDRA/cassandra;
     ant;
   "
   start_cluster
@@ -85,15 +88,19 @@ update()
 
   if [ $update_opt = "recompile" ]; then
     recompile="
-      cd $SYNC_POINT/YCSB;
+      cd $SYNC_POINT_YCSB/YCSB;
       mvn clean install -fae;
-      cd $SYNC_POINT/cassandra;
+      cd $SYNC_POINT_CASSANDRA/cassandra;
       ant;
     "
   fi
 
   ssh -t sonnbc@node-00.riak.confluence.emulab.net -C "
-    cd $SYNC_POINT;
+    cd $SYNC_POINT_YCSB;
+    git pull;
+    cd $SYNC_POINT_CASSANDRA;
+    git fetch;
+    git checkout -b cassandra_branch;
     git pull;
     $recompile
   "
@@ -103,16 +110,17 @@ update()
   fi
 }
 
-while getopts "du:n:" opt; do
+while getopts "du:n:b:" opt; do
   case "$opt" in
     d) action='deploy';;
     u) action='update'; update_opt==$OPTARG;;
     n) numnode=$OPTARG;;
+    b) cassandra_branch=$OPTARG;;
   esac
 done
 
 
-if [ -z "$numnode" ] || [ -z "$action" ]; then
+if [ -z "$numnode" ] || [ -z "$action" ] || [ -z $cassandra_branch ]; then
     usage $0
 fi
 

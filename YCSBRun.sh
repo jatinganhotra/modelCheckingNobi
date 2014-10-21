@@ -1,10 +1,10 @@
 #!/bin/bash
 
-YCSB_HOME=/scratch/Confluence/modelChecking/YCSB
+YCSB_HOME=/scratch/Confluence/modelCheckingYCSB/YCSB
 
 usage()
 {
-  echo "usage: $1 -n numnode [-l (load data) | -t (run test)]"
+  echo "usage: $1 -n numnode -h hosts [-l (load data) | -t (run test)]"
   exit -1
 }
 
@@ -28,7 +28,7 @@ load()
     com.yahoo.ycsb.Client -load -db com.yahoo.ycsb.db.CassandraClient10 \
     -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
     -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 10\
-    -p hosts=\"10.1.1.2,10.1.1.3,10.1.1.4,10.1.1.5,10.1.1.6,10.1.1.7,10.1.1.8,10.1.1.9,10.1.1.10\"
+    -p hosts=\"$host\"
   "
 }
 
@@ -42,7 +42,7 @@ run_test()
       com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
       -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
       -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 20 -target 500\
-      -p hosts=\"10.1.1.2,10.1.1.3,10.1.1.4,10.1.1.5,10.1.1.6,10.1.1.7,10.1.1.8,10.1.1.9,10.1.1.10\"
+      -p hosts=\"$host\"
     " 2> node-0$i.log &
   done
 
@@ -52,15 +52,16 @@ run_test()
   rm node-0*.log
 }
 
-while getopts "ltn:" opt; do
+while getopts "ltn:h:" opt; do
   case "$opt" in
     l) action='load';;
     t) action='run_test';;
     n) numnode=$OPTARG;;
+    h) hosts=$OPTARG;;
   esac
 done
 
-if [ -z "$numnode" ] || [ -z "$action" ]; then
+if [ -z "$numnode" ] || [ -z "$action" ] || [ -z "$hosts" ]; then
     usage $0
 fi
 
