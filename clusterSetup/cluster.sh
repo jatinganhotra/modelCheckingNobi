@@ -9,9 +9,9 @@ CASSANDRA_LOG=/var/log/cassandra
 
 usage()
 {
-  echo "usage: $1 -n numnode -b cassandraBranch [timestamp | agnostic] [-d (deploy) | -u (update) recompile/reset/keep]"
+  echo "usage: $1 -n numnode -b cassandraBranch [timestampBased | agnostic] [-d (deploy) | -u (update) recompile/reset/keep]"
   echo "recompile: recompile cassandra and YCSB and reset cluster"
-  echo "reset: don't recompile the code but reset cluster"
+  echo "reset: don't recompile the code but reset cluster (empty all data)"
   echo "keep: just git pull but do nothing else"
   exit -1
 }
@@ -58,7 +58,7 @@ start_cluster()
 
   #start other nodes
   for (( i = 0; i < $numnode; i++)); do
-    ssh -t sonnbc@node-0$i.riak.confluence.emulab.net -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
+    ssh -t sonnbc@node-0$i.riak.confluence.emulab.net -C "export $CASSANDRA_INCLUDE=$CASSANDRA_HOME/bin/cassandra.in.sh; $CASSANDRA_HOME/bin/cassandra; sleep 15;" &
   done
 
   wait
@@ -76,7 +76,7 @@ deploy()
     git clone git@github.com:Sonnbc/modelCheckingNobi.git $SYNC_POINT_YCSB;
     cd $SYNC_POINT_YCSB/YCSB;
     mvn clean install -fae;
-    cd $SYNC_POINT_CASSANDRA/cassandra;
+    cd $SYNC_POINT_CASSANDRA;
     ant;
   "
   start_cluster
@@ -90,7 +90,7 @@ update()
     recompile="
       cd $SYNC_POINT_YCSB/YCSB;
       mvn clean install -fae;
-      cd $SYNC_POINT_CASSANDRA/cassandra;
+      cd $SYNC_POINT_CASSANDRA;
       ant;
     "
   fi
