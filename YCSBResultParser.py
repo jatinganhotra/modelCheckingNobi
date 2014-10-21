@@ -30,14 +30,14 @@ def main(filename):
       if isRead:
         if key not in reads:
           reads[key] = []
-        reads[key].append( Read(value, (st+en)/2, isGoodRead) )
+        reads[key].append( Read(value, st, isGoodRead) )
         readCnt += 1
         if isGoodRead:
           goodReadCnt += 1
       else:
         if key not in writes:
           writes[key] = []
-        writes[key].append( Write(value, (st+en)/2) )
+        writes[key].append( Write(value, st) )
         writeCnt += 1
     else:
       print "ERROR parsing: %s" % line
@@ -48,7 +48,7 @@ def main(filename):
 
   freshReadCnt, freshGoodReadCnt = 0, 0
   for key in reads:
-    readList, writeList, i = reads[key], writes[key], 0
+    readList, writeList, i = reads[key], writes.get(key, []), 0
     for read in reads[key]:
       while (i < len(writeList) and writeList[i].Timestamp <= read.Timestamp):
         i += 1

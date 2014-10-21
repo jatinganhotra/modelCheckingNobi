@@ -889,7 +889,12 @@ public class StorageProxy implements StorageProxyMBean
                 CFMetaData cfm = Schema.instance.getCFMetaData(command.getKeyspace(), command.getColumnFamilyName());
 
                 ReadRepairDecision rrDecision = cfm.newReadRepairDecision();
-                endpoints = consistency_level.filterForQuery(table, endpoints, rrDecision);
+                
+                /*Son: disable filtering so that the coordinator talks to all replicas. The coordinator still only needs
+                to wait for consistency_level-dependent number of replicas as coded in 
+                ReadCallBack.response() and ReadCallBack.get()*/
+                
+                //endpoints = consistency_level.filterForQuery(table, endpoints, rrDecision);
                 
                 if (rrDecision != ReadRepairDecision.NONE) {
                     ReadRepairMetrics.attempted.mark();

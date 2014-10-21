@@ -61,6 +61,7 @@ start_cluster()
   done
 
   wait
+
 }
 
 deploy()

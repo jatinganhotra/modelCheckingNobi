@@ -1,6 +1,6 @@
 #!/bin/bash
 
-YCSB_HOME=/modelChecking/YCSB
+YCSB_HOME=/scratch/Confluence/modelChecking/YCSB
 
 usage()
 {
@@ -41,7 +41,7 @@ run_test()
       java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
       com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
       -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
-      -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 10\
+      -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 20 -target 500\
       -p hosts=\"10.1.1.2,10.1.1.3,10.1.1.4,10.1.1.5,10.1.1.6,10.1.1.7,10.1.1.8,10.1.1.9,10.1.1.10\"
     " 2> node-0$i.log &
   done
