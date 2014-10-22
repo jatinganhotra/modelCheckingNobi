@@ -20,35 +20,43 @@ def get_hosts(numnode):
     " % numnode
   return os.popen(cmd).read()
 
-def main(numnode, st, en, counts):
+def set_network_delay(numnode, delay):
+  m = delay #mean
+  v = max(1, (m*0.15)**2) #sd is within 15% of mean
+  mu = np.log(m**2 / math.sqrt(v + m**2))
+  sigma = math.sqrt(np.log(1 + v/m**2))
+
+  netem_cmd = 'ssh sonnbc@node-00.riak.confluence.emulab.net \
+    /scratch/Confluence/riak/netem/set_delay_all.sh %s %s %s \
+    >/dev/null' % (numnode, mu, sigma)
+
+  os.system(netem_cmd)
+  print "mean delay = %s, sd = %s" % (m, math.sqrt(v))
+
+def main(numnode, delay, st, en, counts):
   hosts = get_hosts(numnode)
   print "Hosts = %s" % hosts
 
-  load_cmd = "./YCSBRun.sh -l -n %s -h %s >/dev/null 2>&1" % (numnode, hosts)
+  load_cmd = "./YCSBRun.sh -l -h %s >/dev/null 2>&1" % hosts
   os.system(load_cmd)
 
+  set_network_delay(numnode, delay):
+
   st, en = max(st, 1), max(en, 1)
-  step = float(en - st) / counts
+  step = (en - st) / counts
   ts = datetime.now()
   for i in xrange(counts):
-    m = st + i*step #mean
-    v = max(1, (m*0.15)**2) #sd is within 15% of mean
-    mu = np.log(m**2 / math.sqrt(v + m**2))
-    sigma = math.sqrt(np.log(1 + v/m**2))
+    rate = st + i*step #mean
 
-    print "%s) time=%s mu=%s, sigma=%s, mean=%s, sd=%s" % (i, datetime.now() - ts, mu, sigma, m, math.sqrt(v))
-    sys.stdout.flush()
-
-    ts = datetime.now()
-
-    netem_cmd = 'ssh sonnbc@node-00.riak.confluence.emulab.net \
-      /scratch/Confluence/riak/netem/set_delay_all.sh %s %s %s \
-      >/dev/null' % (numnode, mu, sigma)
-    run_cmd = "./YCSBRun.sh -t -n %s -h %s | grep INFO > ycsb.log \
-              && python YCSBResultParser.py ycsb.log" % (numnode, hosts)
-    os.system(netem_cmd)
+    print "Iteration #%s:" % i
+    run_cmd = "./YCSBRun.sh -t %s -h %s | grep INFO > ycsb.log \
+              && python YCSBResultParser.py ycsb.log" % (rate, hosts)
     os.system(run_cmd)
 
+    elapsed = (datetime.now()-ts).total_second()
+    ts = datetime.now()
+    print "time=%s, rate=%s (ops/s) = %s (s/op) check %s" % (elapsed, rate, 1.0/rate, elapsed/100) #100 is ops count
+
 if __name__ == "__main__":
-  numnode, st, en, counts = [int(x) for x in sys.argv[1:5]]
-  main(numnode, st, en, counts)
+  numnode, latency,  st, en, counts = [int(x) for x in sys.argv[1:6]]
+  main(numnode, delay, st, en, counts)
