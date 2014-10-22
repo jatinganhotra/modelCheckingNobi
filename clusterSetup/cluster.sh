@@ -56,9 +56,9 @@ start_cluster()
 
   wait
 
-  #start other nodes
+  #start nodes
   for (( i = 0; i < $numnode; i++)); do
-    ssh -t sonnbc@node-0$i.riak.confluence.emulab.net -C "export $CASSANDRA_INCLUDE=$CASSANDRA_HOME/bin/cassandra.in.sh; $CASSANDRA_HOME/bin/cassandra; sleep 15;" &
+    ssh -t sonnbc@node-0$i.riak.confluence.emulab.net -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
   done
 
   wait
@@ -77,6 +77,8 @@ deploy()
     cd $SYNC_POINT_YCSB/YCSB;
     mvn clean install -fae;
     cd $SYNC_POINT_CASSANDRA;
+    git fetch;
+    git checkout $cassandra_branch;
     ant;
   "
   start_cluster
@@ -91,6 +93,8 @@ update()
       cd $SYNC_POINT_YCSB/YCSB;
       mvn clean install -fae;
       cd $SYNC_POINT_CASSANDRA;
+      git fetch;
+      git checkout $cassandra_branch;
       ant;
     "
   fi
@@ -100,11 +104,12 @@ update()
     git pull;
     cd $SYNC_POINT_CASSANDRA;
     git fetch;
-    git checkout -b cassandra_branch;
+    git checkout $cassandra_branch;
     git pull;
     $recompile
   "
 
+  echo "update option : $update_opt"
   if [ $update_opt = "recompile" ] || [ $update_opt = "reset" ]; then
     start_cluster
   fi
@@ -113,7 +118,7 @@ update()
 while getopts "du:n:b:" opt; do
   case "$opt" in
     d) action='deploy';;
-    u) action='update'; update_opt==$OPTARG;;
+    u) action='update'; update_opt=$OPTARG;;
     n) numnode=$OPTARG;;
     b) cassandra_branch=$OPTARG;;
   esac
