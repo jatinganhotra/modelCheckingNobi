@@ -4,13 +4,24 @@ YCSB_HOME=/scratch/Confluence/modelCheckingYCSB/YCSB
 
 usage()
 {
-  echo "usage: $1 -h hosts [-l (load data) | -t (run test) rate (operations/s)]"
+  echo "usage: $1 -n numnode -h hosts [-l (load data) | -t (run test)]"
   exit -1
+}
+
+get_hosts()
+{
+  hosts=$(
+    for (( i = 0; i < $numnode; i++)); do
+      ssh sonnbc@node-0$i.riak.confluence.emulab.net -C "
+        ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}'
+      "
+    done | tr "\\n" ",")
+  echo $hosts
 }
 
 load()
 {
-  echo "Load"
+  echo "Load $numnode"
 
   echo $hosts
   ssh sonnbc@node-00.riak.confluence.emulab.net -C "
@@ -24,26 +35,34 @@ load()
 
 run_test()
 {
-  echo "Run test"
+  echo "Run test $numnode"
 
-  ssh sonnbc@node-00.riak.confluence.emulab.net -C "
-    java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
-    com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
-    -p cassandra.writeconsistencylevel=ALL -p cassandra.readconsistencylevel=ALL \
-    -P $YCSB_HOME/workloads/modelCheckingWorkload -target $rate\
-    -p hosts=\"$hosts\"
-  " 2>&1
+  for (( i = 0; i < $numnode; i++)); do
+    ssh sonnbc@node-0$i.riak.confluence.emulab.net -C "
+      java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
+      com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
+      -p cassandra.writeconsistencylevel=ALL -p cassandra.readconsistencylevel=ALL \
+      -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 20 -target 100\
+      -p hosts=\"$hosts\"
+    " 2> node-0$i.log &
+  done
+
+  wait
+
+  cat node-0*.log
+  rm node-0*.log
 }
 
-while getopts "lt:h:" opt; do
+while getopts "ltn:h:" opt; do
   case "$opt" in
     l) action='load';;
-    t) action='run_test';rate=$OPTARG;;
+    t) action='run_test';;
+    n) numnode=$OPTARG;;
     h) hosts=$OPTARG;;
   esac
 done
 
-if [ -z "$action" ] || [ -z "$hosts" ]; then
+if [ -z "$numnode" ] || [ -z "$action" ] || [ -z "$hosts" ]; then
     usage $0
 fi
 
