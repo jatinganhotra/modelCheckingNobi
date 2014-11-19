@@ -40,23 +40,26 @@ def main(numnode, delay, st, en, counts):
   load_cmd = "./YCSBRun.sh -l -h %s >/dev/null 2>&1" % hosts
   os.system(load_cmd)
 
-  set_network_delay(numnode, delay):
+  set_network_delay(numnode, delay)
 
   st, en = max(st, 1), max(en, 1)
   step = (en - st) / counts
   ts = datetime.now()
-  for i in xrange(counts):
-    rate = st + i*step #mean
+
+  i = 0
+  for ops in [0.01, 0.1, 0.5]:
+    i += 1
+    rate = int(1/ops)
 
     print "Iteration #%s:" % i
     run_cmd = "./YCSBRun.sh -t %s -h %s | grep INFO > ycsb.log \
               && python YCSBResultParser.py ycsb.log" % (rate, hosts)
     os.system(run_cmd)
 
-    elapsed = (datetime.now()-ts).total_second()
+    elapsed = (datetime.now()-ts).total_seconds()
     ts = datetime.now()
-    print "time=%s, rate=%s (ops/s) = %s (s/op) check %s" % (elapsed, rate, 1.0/rate, elapsed/100) #100 is ops count
+    print "time=%s, rate=%s (ops/s) = %s (s/op) check %s" % (elapsed, rate, ops, elapsed/100) #100 is ops count
 
 if __name__ == "__main__":
-  numnode, latency,  st, en, counts = [int(x) for x in sys.argv[1:6]]
+  numnode, delay,  st, en, counts = [int(x) for x in sys.argv[1:6]]
   main(numnode, delay, st, en, counts)

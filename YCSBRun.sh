@@ -28,7 +28,7 @@ load()
     java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
     com.yahoo.ycsb.Client -load -db com.yahoo.ycsb.db.CassandraClient10 \
     -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
-    -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 10\
+    -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 1\
     -p hosts=\"$hosts\"
   "
 }
@@ -37,12 +37,12 @@ run_test()
 {
   echo "Run test $numnode"
 
-  for (( i = 0; i < $numnode; i++)); do
+  for (( i = 0; i < 1; i++)); do #TODO: change back to numnode
     ssh sonnbc@node-0$i.riak.confluence.emulab.net -C "
       java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
       com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
-      -p cassandra.writeconsistencylevel=ALL -p cassandra.readconsistencylevel=ALL \
-      -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 20 -target 100\
+      -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
+      -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 50 \
       -p hosts=\"$hosts\"
     " 2> node-0$i.log &
   done
@@ -50,20 +50,21 @@ run_test()
   wait
 
   cat node-0*.log
-  rm node-0*.log
+  #rm node-0*.log
 }
 
-while getopts "ltn:h:" opt; do
+while getopts "ltn:" opt; do
   case "$opt" in
     l) action='load';;
     t) action='run_test';;
     n) numnode=$OPTARG;;
-    h) hosts=$OPTARG;;
   esac
 done
 
-if [ -z "$numnode" ] || [ -z "$action" ] || [ -z "$hosts" ]; then
+if [ -z "$numnode" ] || [ -z "$action" ]; then
     usage $0
 fi
+
+hosts=$(get_hosts)
 
 $action
