@@ -41,7 +41,7 @@ run_test()
     ssh sonnbc@node-0$i.riak.confluence.emulab.net -C "
       java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
       com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
-      -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
+      -p cassandra.writeconsistencylevel=ONE -p cassandra.readconsistencylevel=ONE \
       -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 50 \
       -p hosts=\"$hosts\"
     " 2> node-0$i.log &
