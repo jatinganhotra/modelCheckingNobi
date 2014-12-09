@@ -2,9 +2,13 @@
 
 YCSB_HOME=/scratch/Confluence/modelCheckingYCSB/YCSB
 
+DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
+USER=$(cat $DIR/clusterSetup/account | grep USER | awk '{print $2}')
+DOMAIN=$(cat $DIR/clusterSetup/account | grep DOMAIN | awk {'print $2'})
+
 usage()
 {
-  echo "usage: $1 -n numnode -h hosts [-l (load data) | -t (run test)]"
+  echo "usage: $1 -n numnode [-l (load data) | -t (run test)]"
   exit -1
 }
 
@@ -12,7 +16,7 @@ get_hosts()
 {
   hosts=$(
     for (( i = 0; i < $numnode; i++)); do
-      ssh sonnbc@node-0$i.riak.confluence.emulab.net -C "
+      ssh $USER@node-0$i.$DOMAIN -C "
         ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}'
       "
     done | tr "\\n" ",")
@@ -24,7 +28,7 @@ load()
   echo "Load $numnode"
 
   echo $hosts
-  ssh sonnbc@node-00.riak.confluence.emulab.net -C "
+  ssh $USER@node-00.$DOMAIN -C "
     java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
     com.yahoo.ycsb.Client -load -db com.yahoo.ycsb.db.CassandraClient10 \
     -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
@@ -38,7 +42,7 @@ run_test()
   echo "Run test $numnode"
 
   for (( i = 0; i < 1; i++)); do #TODO: change back to numnode
-    ssh sonnbc@node-0$i.riak.confluence.emulab.net -C "
+    ssh $USER@node-0$i.$DOMAIN -C "
       java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
       com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
       -p cassandra.writeconsistencylevel=ONE -p cassandra.readconsistencylevel=ONE \

@@ -7,6 +7,10 @@ SYNC_POINT_YCSB=/scratch/Confluence/modelCheckingYCSB
 CASSANDRA_DATA=/var/lib/cassandra
 CASSANDRA_LOG=/var/log/cassandra
 
+DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
+USER=$(cat $DIR/account | grep USER | awk '{print $2}')
+DOMAIN=$(cat $DIR/account | grep DOMAIN | awk {'print $2'})
+
 usage()
 {
   echo "usage: $1 -n numnode -b cassandraBranch [timestampBased | agnostic] [-d (deploy) | -u (update) recompile/reset/keep]"
@@ -20,7 +24,7 @@ kill_cassandra()
 {
   echo "Kill Cassandra $numnode"
   for (( i = 0; i < $numnode; i++)); do
-    ssh -t sonnbc@node-0$i.riak.confluence.emulab.net -C "
+    ssh -t $USER@node-0$i.$DOMAIN -C "
       ps aux | grep cassandra | grep -v grep | awk '{print \$2}' | xargs -L1 kill
     " &
   done
@@ -30,16 +34,16 @@ kill_cassandra()
 
 init_single_node()
 {
-  ssh -t sonnbc@node-0$1.riak.confluence.emulab.net -C "
+  ssh -t $USER@node-0$1.$DOMAIN -C "
     sudo rm -rf $CASSANDRA_HOME;
     sudo cp -r $SYNC_POINT_CASSANDRA $CASSANDRA_HOME;
-    sudo chown -R sonnbc: $CASSANDRA_HOME;
+    sudo chown -R $USER: $CASSANDRA_HOME;
     sudo rm -rf $CASSANDRA_DATA;
     sudo mkdir -p $CASSANDRA_DATA;
-    sudo chown -R sonnbc $CASSANDRA_DATA;
+    sudo chown -R $USER $CASSANDRA_DATA;
     sudo rm -rf $CASSANDRA_LOG;
     sudo mkdir -p $CASSANDRA_LOG;
-    sudo chown -R sonnbc $CASSANDRA_LOG;
+    sudo chown -R $USER $CASSANDRA_LOG;
     export listen_ip=\$(ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}');
     sudo sed -i -e \"s/localhost/\$listen_ip/g\" $CASSANDRA_HOME/conf/cassandra.yaml;
   "
@@ -58,7 +62,7 @@ start_cluster()
 
   #start nodes
   for (( i = 0; i < $numnode; i++)); do
-    ssh -t sonnbc@node-0$i.riak.confluence.emulab.net -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
+    ssh -t $USER@node-0$i.$DOMAIN -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
   done
 
   wait
@@ -69,11 +73,11 @@ deploy()
 {
   echo "Deploy $numnode"
 
-  ssh -t sonnbc@node-00.riak.confluence.emulab.net -C "
+  ssh -t $USER@node-00.$DOMAIN -C "
     sudo rm -rf $SYNC_POINT_CASSANDRA;
     sudo rm -rf $SYNC_POINT_YCSB;
-    git clone git@github.com:Sonnbc/modelCheckingCassandra.git $SYNC_POINT_CASSANDRA;
-    git clone git@github.com:Sonnbc/modelCheckingNobi.git $SYNC_POINT_YCSB;
+    git clone git@github.com:$USER/modelCheckingCassandra.git $SYNC_POINT_CASSANDRA;
+    git clone git@github.com:$USER/modelCheckingNobi.git $SYNC_POINT_YCSB;
     cd $SYNC_POINT_YCSB/YCSB;
     mvn clean install -fae;
     cd $SYNC_POINT_CASSANDRA;
@@ -99,7 +103,7 @@ update()
     "
   fi
 
-  ssh -t sonnbc@node-00.riak.confluence.emulab.net -C "
+  ssh -t $USER@node-00.$DOMAIN -C "
     cd $SYNC_POINT_YCSB;
     git pull;
     cd $SYNC_POINT_CASSANDRA;
