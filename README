@@ -22,7 +22,7 @@ Here is the explanation:
 
   N: the number of nodes in your cluster
 
-1. Initializationi
+1. Initialization
 
 The initialzation  is to be done once even if your nodes are swapped out and
 in again.
@@ -132,7 +132,7 @@ You might need to change YCSB_HOME in YCSBRun.sh if you have changed
 SYNC_POINT_YCSB in clusterSetup/cluster.sh
 
 The workload used is YCSB_HOME/workloads/modelCheckingWorkload. Since
-the nodes have a copy of the file in its cloned repo, you NEED TO MAKE SURE
+the nodes have a copy of the file in their cloned repo, you NEED TO MAKE SURE
 any changes in this file are reflected at the nodes. Otherwise they will
 just run YCSB with the old version that they have. So you need to commit your
 changes and push them to github. Then call clusterSeup/cluster.sh with
