@@ -155,10 +155,13 @@ public class DBWrapper extends DB
 		long st=System.nanoTime();
 		int res=_db.update(table,key,saved_values);
 		long en=System.nanoTime();
+    Properties props = getProperties();
+    int clientid=Integer.parseInt(props.getProperty("clientid"));
 		_measurements.measure("UPDATE",(int)((en-st)/1000));
 		_measurements.reportReturnCode("UPDATE",res);
 		
-		logger.info("UPDATE: key={}, value={}, st={}, en={}", new Object[] {key, content, st, en});	
+		//logger.info("UPDATE: key={}, value={}, st={}, en={}", new Object[] {key, content, st, en});	
+		logger.info("UPDATE: clientid={}, key={}, value={}, st={}, en={}", new Object[] {clientid, key, content, st, en});	
 		return res;
 	}
 
@@ -185,10 +188,13 @@ public class DBWrapper extends DB
 		long st=System.nanoTime();
 		int res=_db.insert(table,key,saved_values);
 		long en=System.nanoTime();
+    Properties props = getProperties();
+    int clientid=Integer.parseInt(props.getProperty("clientid"));
 		_measurements.measure("INSERT",(int)((en-st)/1000));
 		_measurements.reportReturnCode("INSERT",res);
 		 
-		logger.info("INSERT: key={}, value={}, st={}, en={}", new Object[] {key, content, st, en});
+		//logger.info("INSERT: key={}, value={}, st={}, en={}", new Object[] {key, content, st, en});
+		logger.info("INSERT: clientid={}, key={}, value={}, st={}, en={}", new Object[] {clientid, key, content, st, en});
 		return res;
 	}
 
