@@ -166,6 +166,7 @@ class ClientThread extends Thread
 	 * @param dotransactions true to do transactions, false to insert data
 	 * @param workload the workload to use
 	 * @param threadid the id of this thread 
+	 * @param clientid the client id
 	 * @param threadcount the total number of threads 
 	 * @param props the properties defining the experiment
 	 * @param opcount the number of operations (transactions or inserts) to do
@@ -635,7 +636,7 @@ public class Client
 		target=Integer.parseInt(props.getProperty("target","0"));
 
     // Jatin: get the client ID
-		clientid=Integer.parseInt(props.getProperty("clientid","1"));
+		clientid=Integer.parseInt(props.getProperty("clientid"));
 
 		
 		//compute the target throughput

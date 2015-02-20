@@ -95,6 +95,9 @@ public class DBWrapper extends DB
 		long st=System.nanoTime();
 		int res=_db.read(table,key, fields, result);
 		long en=System.nanoTime();
+
+    Properties props = getProperties();
+    int clientid=Integer.parseInt(props.getProperty("clientid"));
 		_measurements.measure("READ",(int)((en-st)/1000));
 		_measurements.reportReturnCode("READ",res);
 			
@@ -104,8 +107,9 @@ public class DBWrapper extends DB
 			builder.append(value);
 		}
 		String content = builder.toString();	
-		logger.info("READ: key={}, value={}, st={}, en={}", new Object[] {key, content, st, en});			
-		return res;
+		//logger.info("READ: key={}, value={}, st={}, en={}", new Object[] {key, content, st, en});			
+		logger.info("READ: clientid={}, key={}, value={}, st={}, en={}", new Object[] {clientid, key, content, st, en});
+    return res;
 	}
 
 	/**
