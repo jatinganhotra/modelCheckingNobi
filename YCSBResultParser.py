@@ -40,22 +40,37 @@ def main(filename):
       print "ERROR parsing: %s" % line
       return 1
 
+  #print reads
+  #print writes
+  print "Sorting the reads & writes based on timestamps"
   reads = {k : sorted(reads[k], key=lambda x: x.Timestamp) for k in reads}
   writes = {k : sorted(writes[k], key=lambda x: x.Timestamp) for k in writes}
+  #print writes
+  #print reads
 
   for key in reads:
     readList, writeList = reads[key], writes.get(key, [])
+    #print readList
+    #print writeList
     writeMap = {w.Value: w for w in writeList}
+    #print "The writeMap is = " + str(writeMap)
+    #print "--------------------"
     lastestResponses = {}
     staleRead = 0
     for read in readList:
+      print "Looking at read = " + str(read)
       write = writeMap.get(read.Value, None)
+      print "The write for the read value is = " + str(write)
+      print "Looking for read.ThreadID = " + str(read.ThreadID)
       latestWrite = lastestResponses.get(read.ThreadID, None)
-      if (latestWrite and write
-          and write.Timestamp < latestWrite.Timestamp):
+      print "Value for latestWrite " + str(latestWrite)
+      if (latestWrite and write and write.Timestamp < latestWrite.Timestamp):
         staleRead += 1
       else:
         lastestResponses[read.ThreadID] = write
+        print lastestResponses
+    print "*********************************************"
+
     print "staleRead=%s/%s, totalWrite=%s" % (staleRead, len(readList), len(writeList))
 
 if __name__ == '__main__':

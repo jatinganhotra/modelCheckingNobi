@@ -1,6 +1,6 @@
 #!/bin/bash
 
-YCSB_HOME=/scratch/Confluence/modelCheckingYCSB/YCSB
+YCSB_HOME=modelCheckingYCSB/YCSB
 
 DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 USER=$(cat $DIR/clusterSetup/account | grep USER | awk '{print $2}')
@@ -40,8 +40,7 @@ load()
 run_test()
 {
   echo "Run test $numnode"
-
-  for (( i = 0; i < 1; i++)); do #TODO: change back to numnode
+  for (( i = 0; i < $numnode; i++)); do
     ssh $USER@node-0$i.$DOMAIN -C "
       java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
       com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
