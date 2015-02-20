@@ -153,6 +153,7 @@ class ClientThread extends Thread
 
 	int _opsdone;
 	int _threadid;
+	int _clientid;
 	int _threadcount;
 	Object _workloadstate;
 	Properties _props;
@@ -170,7 +171,7 @@ class ClientThread extends Thread
 	 * @param opcount the number of operations (transactions or inserts) to do
 	 * @param targetperthreadperms target number of operations per thread per ms
 	 */
-	public ClientThread(DB db, boolean dotransactions, Workload workload, int threadid, int threadcount, Properties props, int opcount, double targetperthreadperms)
+	public ClientThread(DB db, boolean dotransactions, Workload workload, int threadid, int clientid, int threadcount, Properties props, int opcount, double targetperthreadperms)
 	{
 		//TODO: consider removing threadcount and threadid
 		_db=db;
@@ -180,6 +181,7 @@ class ClientThread extends Thread
 		_opsdone=0;
 		_target=targetperthreadperms;
 		_threadid=threadid;
+    _clientid=clientid;
 		_threadcount=threadcount;
 		_props=props;
 		//System.out.println("Interval = "+interval);
@@ -205,7 +207,7 @@ class ClientThread extends Thread
 
 		try
 		{
-			_workloadstate=_workload.initThread(_props,_threadid,_threadcount);
+			_workloadstate=_workload.initThread(_props,_threadid,_clientid,_threadcount);
 		}
 		catch (WorkloadException e)
 		{
@@ -356,6 +358,7 @@ public class Client
 		System.out.println("  -target n: attempt to do n operations per second (default: unlimited) - can also\n" +
 				"             be specified as the \"target\" property using -p");
 		System.out.println("  -load:  run the loading phase of the workload");
+		System.out.println("  -clientid:  the clientID for this client");
 		System.out.println("  -t:  run the transactions phase of the workload (default)");
 		System.out.println("  -db dbname: specify the name of the DB to use (default: com.yahoo.ycsb.BasicDB) - \n" +
 				"              can also be specified as the \"db\" property using -p");
@@ -445,6 +448,7 @@ public class Client
 		boolean dotransactions=true;
 		int threadcount=1;
 		int target=0;
+    int clientid=0;
 		boolean status=false;
 		String label="";
 
@@ -471,6 +475,18 @@ public class Client
 				props.setProperty("threadcount", tcount+"");
 				argindex++;
 			}
+      else if (args[argindex].compareTo("-clientid")==0)
+			{
+				argindex++;
+				if (argindex>=args.length)
+				{
+					usageMessage();
+					System.exit(0);
+				}
+				int tclientid=Integer.parseInt(args[argindex]);
+				props.setProperty("clientid", tclientid+"");
+				argindex++;
+      }
 			else if (args[argindex].compareTo("-target")==0)
 			{
 				argindex++;
@@ -617,6 +633,10 @@ public class Client
 		threadcount=Integer.parseInt(props.getProperty("threadcount","1"));
 		dbname=props.getProperty("db","com.yahoo.ycsb.BasicDB");
 		target=Integer.parseInt(props.getProperty("target","0"));
+
+    // Jatin: get the client ID
+		clientid=Integer.parseInt(props.getProperty("clientid","1"));
+
 		
 		//compute the target throughput
 		double targetperthreadperms=-1;
@@ -726,7 +746,7 @@ public class Client
 				System.exit(0);
 			}
 
-			Thread t=new ClientThread(db,dotransactions,workload,threadid,threadcount,props,opcount/threadcount,targetperthreadperms);
+			Thread t=new ClientThread(db,dotransactions,workload,threadid,clientid,threadcount,props,opcount/threadcount,targetperthreadperms);
 
 			threads.add(t);
 			//t.start();

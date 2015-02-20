@@ -46,6 +46,7 @@ run_test()
       com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
       -p cassandra.writeconsistencylevel=ONE -p cassandra.readconsistencylevel=ONE \
       -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 50 \
+      -clientid $i \
       -p hosts=\"$hosts\"
     " 2> node-0$i.log &
   done
