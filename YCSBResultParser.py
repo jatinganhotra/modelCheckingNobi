@@ -58,18 +58,18 @@ def main(filename):
     lastestResponses = {}
     staleRead = 0
     for read in readList:
-      print "Looking at read = " + str(read)
+      #print "Looking at read = " + str(read)
       write = writeMap.get(read.Value, None)
-      print "The write for the read value is = " + str(write)
-      print "Looking for read.ThreadID = " + str(read.ThreadID)
+      #print "The write for the read value is = " + str(write)
+      #print "Looking for read.ThreadID = " + str(read.ThreadID)
       latestWrite = lastestResponses.get(read.ThreadID, None)
-      print "Value for latestWrite " + str(latestWrite)
+      #print "Value for latestWrite " + str(latestWrite)
       if (latestWrite and write and write.Timestamp < latestWrite.Timestamp):
         staleRead += 1
       else:
         lastestResponses[read.ThreadID] = write
-        print lastestResponses
-    print "*********************************************"
+        #print lastestResponses
+    #print "*********************************************"
 
     print "staleRead=%s/%s, totalWrite=%s" % (staleRead, len(readList), len(writeList))
 
