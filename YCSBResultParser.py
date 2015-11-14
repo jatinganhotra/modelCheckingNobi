@@ -65,6 +65,12 @@ def main(filename):
       latestWrite = lastestResponses.get(read.ThreadID, None)
       #print "Value for latestWrite " + str(latestWrite)
       if (latestWrite and write and write.Timestamp < latestWrite.Timestamp):
+        print "-------------------------------------------"
+        print " read is = " + str(read)
+        print " latestWrite is - " + str(latestWrite)
+        print " write is - " + str(write)
+        print " write.Timestamp = " + str(write.Timestamp)
+        print " latestWrite.Timestamp = " + str(latestWrite.Timestamp)
         staleRead += 1
       else:
         lastestResponses[read.ThreadID] = write
