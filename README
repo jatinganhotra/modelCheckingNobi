@@ -3,12 +3,12 @@ Cassandra Maude project
 Codebase overview:
 -------------------
 There are 2 repositories:
-  1. https://github.com/Sonnbc/modelCheckingNobi
+  1. https://github.com/jatinganhotra/modelCheckingYCSB
     This contains YCSB, cluster management and deployment code as well as
     scripts to run experiments and analyize results.
     The scripts are designed to run on any computer (either an emulab server
     or your own local pc).
-  2. https://github.com/Sonnbc/modelCheckingCassandra
+  2. https://github.com/jatinganhotra/modelCheckingCassandra
     This contains modified Cassandra.
     Currently there are two branches: "timestampBased" and "agnostic"
     corressponding to TB and TA strategies.
@@ -149,4 +149,4 @@ changes and push them to github. Then call clusterSeup/cluster.sh with
 
 Contact:
 -------------------
-Son - sonnbc@gmail.com
+Jatin Ganhotra - jatin.ganhotra@gmail.com
