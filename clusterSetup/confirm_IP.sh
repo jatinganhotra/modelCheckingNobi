@@ -10,3 +10,19 @@ x=\$(ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}');
   echo "The listen ip address is";
   echo \$x;
   "
+
+ssh -t $USER@node-01.$DOMAIN -C "
+x=\$(ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}');
+  echo "The listen ip address is";
+  echo \$x;
+  "
+ssh -t $USER@node-02.$DOMAIN -C "
+x=\$(ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}');
+  echo "The listen ip address is";
+  echo \$x;
+  "
+ssh -t $USER@node-03.$DOMAIN -C "
+x=\$(ifconfig | grep 10\.1\.1 | tr ':' ' ' | awk '{print \$3}');
+  echo "The listen ip address is";
+  echo \$x;
+  "
