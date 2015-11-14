@@ -40,22 +40,52 @@ load()
 run_test()
 {
   echo "Run test $numnode"
-  for (( i = 0; i < $numnode; i++)); do
-    ssh $USER@node-0$i.$DOMAIN -C "
+    ssh $USER@node-00.$DOMAIN -C "
+      java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
+      com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
+      -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
+      -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 50 \
+      -clientid 0 \
+      -target 10 \
+      -p hosts=\"$hosts\"
+    " 2> node-00.log &
+
+    ssh $USER@node-01.$DOMAIN -C "
       java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
       com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
       -p cassandra.writeconsistencylevel=ONE -p cassandra.readconsistencylevel=ONE \
       -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 50 \
-      -clientid $i \
+      -clientid 1 \
+      -target 10 \
       -p hosts=\"$hosts\"
-    " 2> node-0$i.log &
-  done
+    " 2> node-01.log &
 
   wait
 
   cat node-0*.log
   #rm node-0*.log
 }
+
+#run_test()
+#{
+#  echo "Run test $numnode"
+#  for (( i = 0; i < $numnode; i++)); do
+#    ssh $USER@node-0$i.$DOMAIN -C "
+#      java -cp $YCSB_HOME/core/target/*:$YCSB_HOME/lib/*:$YCSB_HOME/cassandra/target/cassandra-binding-0.1.4.jar \
+#      com.yahoo.ycsb.Client -t -db com.yahoo.ycsb.db.CassandraClient10 \
+#      -p cassandra.writeconsistencylevel=QUORUM -p cassandra.readconsistencylevel=QUORUM \
+#      -P $YCSB_HOME/workloads/modelCheckingWorkload -threads 50 \
+#      -clientid $i \
+#      -target 10 \
+#      -p hosts=\"$hosts\"
+#    " 2> node-0$i.log &
+#  done
+#
+#  wait
+#
+#  cat node-0*.log
+#  #rm node-0*.log
+#}
 
 while getopts "ltn:" opt; do
   case "$opt" in
