@@ -71,18 +71,12 @@ start_cluster()
   wait
 
   echo "Starting all nodes one by one"
-  #TODO - Starting nodes manually, using the script doesn't work for now
-  #start nodes
-  #for (( i = 0; i < $numnode; i++)); do
+  # TODO - Starting nodes manually, using the script doesn't work for now
+  # start nodes
+  # for (( i = 0; i < $numnode; i++)); do
   #  ssh -t $USER@node-0$i.$DOMAIN -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
-  #done
+  # done
 
-  #  ssh -t $USER@node-00.$DOMAIN -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
-  #  ssh -t $USER@node-01.$DOMAIN -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
-  #  sleep 30;
-  #  ssh -t $USER@node-02.$DOMAIN -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
-  #  ssh -t $USER@node-03.$DOMAIN -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
-  #  ssh -t $USER@node-04.$DOMAIN -C "$CASSANDRA_HOME/bin/cassandra; sleep 15;" &
   wait
 
 }
